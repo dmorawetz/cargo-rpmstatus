@@ -61,37 +61,19 @@ impl<'a> fmt::Display for Display<'a> {
                             if deb.compatible {
                                 write!(
                                     fmt,
-                                    "{} ({} in debian)",
+                                    "{} ({} in rawhide)",
                                     pkg.green(),
                                     deb.version.yellow()
                                 )?;
                             } else if deb.outdated {
                                 write!(
                                     fmt,
-                                    "{} (outdated, {} in debian)",
+                                    "{} (outdated, {} in rawhide)",
                                     pkg.yellow(),
                                     deb.version.red()
                                 )?;
                             } else {
-                                write!(fmt, "{} (in debian)", pkg.green())?;
-                            }
-                        } else if deb.in_new {
-                            if deb.compatible {
-                                write!(
-                                    fmt,
-                                    "{} ({} in debian NEW queue)",
-                                    pkg.blue(),
-                                    deb.version.yellow()
-                                )?;
-                            } else if deb.outdated {
-                                write!(
-                                    fmt,
-                                    "{}, (outdated, {} in debian NEW queue)",
-                                    pkg.blue(),
-                                    deb.version.red()
-                                )?;
-                            } else {
-                                write!(fmt, "{} (in debian NEW queue)", pkg.blue())?;
+                                write!(fmt, "{} (in rawhide)", pkg.green())?;
                             }
                         } else if deb.outdated {
                             write!(fmt, "{} (outdated, {})", pkg.red(), deb.version.red())?;

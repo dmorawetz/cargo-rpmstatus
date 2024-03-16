@@ -132,7 +132,7 @@ fn run_task(db: &mut Connection, pkg: Pkg) -> Result<DebianInfo> {
         version: String::new(),
     };
 
-    let mut info = db.search(&pkg.name, &pkg.version).unwrap();
+    let mut info = db.search(&pkg.name, &pkg.version)?;
     if info.status == PkgStatus::NotFound {
         info = db.search_new(&pkg.name, &pkg.version).unwrap();
         if info.status != PkgStatus::NotFound {

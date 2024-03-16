@@ -7,7 +7,7 @@ use structopt::StructOpt;
 #[structopt(bin_name = "cargo")]
 pub enum Opts {
     #[structopt(
-    name = "debstatus",
+    name = "rpmstatus",
     setting = AppSettings::UnifiedHelpMessage,
     setting = AppSettings::DeriveDisplayOrder,
     setting = AppSettings::DontCollapseArgsInUsage
