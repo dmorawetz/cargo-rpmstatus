@@ -3,7 +3,9 @@ use sqlite::Connection as SqliteCon;
 use sqlite::State;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-pub(crate) use std::time::SystemTime;
+use std::env::consts::ARCH;
+use std::fs;
+use std::fs::File;
 
 const KOJI_REPO: &str = "https://kojipkgs.fedoraproject.org/repos";
 
@@ -21,25 +23,39 @@ pub struct PkgInfo {
     pub version: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CacheEntry {
-    pub from: SystemTime,
-    pub info: PkgInfo,
+pub fn update_rpm_database() -> Result<()> {
+    let cache_dir = dirs::cache_dir()
+            .context("cache directory not found")?
+            .join("cargo-rpmstatus");
+
+    debug!("Creating cache dir at {}", &cache_dir.display());
+    fs::create_dir_all(&cache_dir)?;
+
+    let path = cache_dir.join("repomd.xml");
+
+    let exists = path.try_exists()?;
+    if !exists {
+        debug!("repomd.xml did not exist, downloading now ...");
+        let url = format!("{}/rawhide/latest/{}/repodata/repomd.xml", KOJI_REPO, ARCH);
+        let response =  ureq::get(&url).call().context("could not download repomd.xml")?;
+        if response.content_type() != "text/xml" {
+            debug!("content type {}", response.content_type());
+            bail!("invalid reponse for repomd");
+        }
+        let mut file = File::create(&path)?;
+        std::io::copy(&mut response.into_reader(), &mut file)?;
+        file.sync_all()?;
+    }
+
+    
+    Ok(())
 }
 
-fn is_compatible(debversion: &str, crateversion: &VersionReq) -> Result<bool, Error> {
-    let mut debversion = debversion.replace('~', "-");
-    if let Some((version, _suffix)) = debversion.split_once('+') {
-        debversion = match version.matches('.').count() {
-            0 => format!("{version}.0.0"),
-            1 => format!("{version}.0"),
-            2 => version.to_owned(),
-            _ => bail!("wrong number of '.' characters in semver string: {version:?}"),
-        };
-    }
-    let debversion = Version::parse(&debversion)?;
+fn is_compatible(rpmversion: &str, crateversion: &VersionReq) -> Result<bool, Error> {
+    let rpmversion = rpmversion.replace('~', "-");
+    let rpmversion = Version::parse(&rpmversion)?;
 
-    Ok(crateversion.matches(&debversion))
+    Ok(crateversion.matches(&rpmversion))
 }
 
 pub struct Connection {
@@ -66,10 +82,6 @@ impl Connection {
         )?;
 
         Ok(info)
-    }
-
-    pub fn search_new(&mut self, package: &str, version: &Version) -> Result<PkgInfo, Error> {
-        self.search(package, version)
     }
 
     pub fn search_generic(
@@ -128,16 +140,14 @@ mod tests {
 
     #[test]
     fn is_compatible_with_tilde() {
+        // The - character is not allowed in RPM versions and is therefore replaced by
+        // the ~ character when packaging with rust2rpm.
+        // cf. https://docs.fedoraproject.org/en-US/packaging-guidelines/Rust/#_package_versioning
         assert!(is_compatible(
             "1.0.0~alpha.9",
             &VersionReq::parse("1.0.0-alpha.9").unwrap()
         )
         .unwrap());
-    }
-
-    #[test]
-    fn is_compatible_with_plus() {
-        assert!(is_compatible("4+20231122+dfsg", &VersionReq::parse("4.0.0").unwrap()).unwrap());
     }
 
     #[test]

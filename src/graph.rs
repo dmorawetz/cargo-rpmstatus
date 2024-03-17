@@ -1,5 +1,5 @@
 use crate::args::Args;
-use crate::debian::Pkg;
+use crate::fedora::Pkg;
 use anyhow::{anyhow, Error};
 use cargo_metadata::{DependencyKind, Metadata, PackageId};
 use petgraph::graph::NodeIndex;

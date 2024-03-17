@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::args::{Args, Charset};
-use crate::debian::Pkg;
+use crate::fedora::Pkg;
 use crate::format::Pattern;
 use crate::graph::Graph;
 use anyhow::{anyhow, Context, Error};

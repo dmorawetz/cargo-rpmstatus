@@ -1,4 +1,4 @@
-use crate::debian::Pkg;
+use crate::fedora::Pkg;
 use crate::format::parse::{Parser, RawChunk};
 use anyhow::{anyhow, Error};
 use colored::Colorize;
@@ -56,8 +56,8 @@ impl<'a> fmt::Display for Display<'a> {
                 Chunk::Raw(ref s) => fmt.write_str(s)?,
                 Chunk::Package => {
                     let pkg = format!("{} v{}", self.package.name, self.package.version);
-                    if let Some(deb) = &self.package.debinfo {
-                        if deb.in_unstable {
+                    if let Some(deb) = &self.package.rpminfo {
+                        if deb.in_rawhide {
                             if deb.compatible {
                                 write!(
                                     fmt,

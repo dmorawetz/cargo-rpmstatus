@@ -4,7 +4,7 @@ use structopt::StructOpt;
 
 mod args;
 mod db;
-mod debian;
+mod fedora;
 mod errors;
 mod format;
 mod graph;
@@ -19,8 +19,8 @@ fn main() -> Result<(), Error> {
     let metadata = metadata::get(&args)?;
     info!("Building graph");
     let mut graph = graph::build(&args, metadata)?;
-    info!("Populating with debian data");
-    debian::populate(&mut graph)?;
+    info!("Populating with packaging data");
+    fedora::populate(&mut graph)?;
     info!("Printing graph");
     tree::print(&args, &graph)?;
 

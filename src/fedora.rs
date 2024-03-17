@@ -1,4 +1,4 @@
-use crate::db::{Connection, PkgStatus};
+use crate::db::{Connection, PkgStatus, self};
 use crate::errors::*;
 use crate::graph::Graph;
 use cargo_metadata::{Package, PackageId, Source};
@@ -20,12 +20,11 @@ pub struct Pkg {
     pub license: Option<String>,
     pub repository: Option<String>,
 
-    pub debinfo: Option<DebianInfo>,
+    pub rpminfo: Option<RpmInfo>,
 }
 
 pub enum PackagingProgress {
     Available,
-    AvailableInNew,
     NeedsUpdate,
     Missing,
 }
@@ -38,7 +37,6 @@ impl fmt::Display for PackagingProgress {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let icon = match self {
             PackagingProgress::Available => "  ",
-            PackagingProgress::AvailableInNew => " N",
             PackagingProgress::NeedsUpdate => "⌛",
             PackagingProgress::Missing => "🔴",
         };
@@ -57,51 +55,42 @@ impl Pkg {
             license: pkg.license,
             repository: pkg.repository,
 
-            debinfo: None,
+            rpminfo: None,
         }
     }
 
-    pub fn in_debian(&self) -> bool {
-        if let Some(deb) = &self.debinfo {
-            deb.in_unstable || deb.in_new
+    pub fn in_fedora(&self) -> bool {
+        if let Some(rpm) = &self.rpminfo {
+            rpm.in_rawhide
         } else {
             false
         }
     }
 
     pub fn show_dependencies(&self) -> bool {
-        if !self.in_debian() {
+        if !self.in_fedora() {
             return true;
         }
 
-        if let Some(deb) = &self.debinfo {
-            !deb.exact_match && (deb.outdated || !deb.compatible)
+        if let Some(rpm) = &self.rpminfo {
+            !rpm.exact_match && (rpm.outdated || !rpm.compatible)
         } else {
             true
         }
     }
 
     pub fn packaging_status(&self) -> PackagingProgress {
-        if let Some(deb) = &self.debinfo {
-            if deb.in_unstable {
-                if deb.compatible {
+        if let Some(rpm) = &self.rpminfo {
+            if rpm.in_rawhide {
+                if rpm.compatible {
                     // Available at an older yet compatible version
                     PackagingProgress::Available
-                } else if deb.outdated {
+                } else if rpm.outdated {
                     PackagingProgress::NeedsUpdate
                 } else {
                     PackagingProgress::Available
                 }
-            } else if deb.in_new {
-                if deb.compatible {
-                    PackagingProgress::AvailableInNew
-                } else if deb.outdated {
-                    // Outdated; in the NEW queue
-                    PackagingProgress::NeedsUpdate
-                } else {
-                    PackagingProgress::AvailableInNew
-                }
-            } else if deb.outdated {
+            } else if rpm.outdated {
                 PackagingProgress::NeedsUpdate
             } else {
                 PackagingProgress::Missing
@@ -113,19 +102,17 @@ impl Pkg {
 }
 
 #[derive(Debug, Clone)]
-pub struct DebianInfo {
-    pub in_unstable: bool,
-    pub in_new: bool,
+pub struct RpmInfo {
+    pub in_rawhide: bool,
     pub outdated: bool,
     pub compatible: bool,
     pub exact_match: bool,
     pub version: String,
 }
 
-fn run_task(db: &mut Connection, pkg: Pkg) -> Result<DebianInfo> {
-    let mut deb = DebianInfo {
-        in_unstable: false,
-        in_new: false,
+fn run_task(db: &mut Connection, pkg: Pkg) -> Result<RpmInfo> {
+    let mut rpm = RpmInfo {
+        in_rawhide: false,
         outdated: false,
         compatible: false,
         exact_match: false,
@@ -133,28 +120,26 @@ fn run_task(db: &mut Connection, pkg: Pkg) -> Result<DebianInfo> {
     };
 
     let mut info = db.search(&pkg.name, &pkg.version)?;
-    if info.status == PkgStatus::NotFound {
-        info = db.search_new(&pkg.name, &pkg.version).unwrap();
-        if info.status != PkgStatus::NotFound {
-            deb.in_new = true;
-            deb.version = info.version;
-        }
-    } else {
-        deb.in_unstable = true;
-        deb.version = info.version;
+    if info.status != PkgStatus::NotFound {
+        rpm.in_rawhide = true;
+        rpm.version = info.version;
     }
 
     match info.status {
-        PkgStatus::Outdated => deb.outdated = true,
-        PkgStatus::Compatible => deb.compatible = true,
-        PkgStatus::Found => deb.exact_match = true,
+        PkgStatus::Outdated => rpm.outdated = true,
+        PkgStatus::Compatible => rpm.compatible = true,
+        PkgStatus::Found => rpm.exact_match = true,
         _ => (),
     }
 
-    Ok(deb)
+    Ok(rpm)
 }
 
 pub fn populate(graph: &mut Graph) -> Result<(), Error> {
+
+    info!("Updating rawhide repo database");
+    db::update_rpm_database()?;
+    
     let (task_tx, task_rx) = crossbeam_channel::unbounded();
     let (return_tx, return_rx) = crossbeam_channel::unbounded();
 
@@ -211,7 +196,7 @@ pub fn populate(graph: &mut Graph) -> Result<(), Error> {
         let deb = result.1?;
 
         if let Some(pkg) = graph.graph.node_weight_mut(idx) {
-            pkg.debinfo = Some(deb);
+            pkg.rpminfo = Some(deb);
         }
         pb.inc(1);
     }
