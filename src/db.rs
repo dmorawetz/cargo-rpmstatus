@@ -251,7 +251,7 @@ impl Connection {
 
 #[cfg(test)]
 mod tests {
-    use crate::db::{is_compatible, Connection, PkgStatus};
+    use crate::db::{is_compatible, update_rpm_database, Connection, PkgStatus};
     use semver::{Version, VersionReq};
 
     #[test]
@@ -275,6 +275,8 @@ mod tests {
 
     #[test]
     fn check_version_reqs() {
+        update_rpm_database().unwrap();
+
         let mut db = Connection::new().unwrap();
         // Fedora rawhide has rust-serde >= v1.0.188 and rust-serde_json >= v1.0.113
         let info = db
