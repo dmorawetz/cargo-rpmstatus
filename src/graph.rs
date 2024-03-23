@@ -1,4 +1,4 @@
-use crate::args::Args;
+use crate::args::RpmArgs;
 use crate::fedora::Pkg;
 use anyhow::{anyhow, Context, Error};
 use cargo_metadata::{DependencyKind, Metadata, PackageId};
@@ -13,7 +13,7 @@ pub struct Graph {
     pub root: Option<PackageId>,
 }
 
-pub fn build(args: &Args, metadata: Metadata) -> Result<Graph, Error> {
+pub fn build(args: &RpmArgs, metadata: Metadata) -> Result<Graph, Error> {
     let resolve = metadata
         .resolve
         .context("Unable to resolve dependency information.")?;

@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use crate::args::{Args, Charset};
+use crate::args::{Charset, RpmArgs};
 use crate::fedora::Pkg;
 use crate::format::Pattern;
 use crate::graph::Graph;
@@ -39,7 +39,7 @@ static ASCII_SYMBOLS: Symbols = Symbols {
     right: "-",
 };
 
-pub fn print(args: &Args, graph: &Graph) -> Result<(), Error> {
+pub fn print(args: &RpmArgs, graph: &Graph) -> Result<(), Error> {
     let format = Pattern::new(&args.format)?;
 
     let direction = if args.invert || args.duplicates {

@@ -1,0 +1,81 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH cargo-rpmstatus 1  "cargo-rpmstatus " 
+.SH NAME
+cargo\-rpmstatus \- cargo\-tree for RPM packaging
+.SH SYNOPSIS
+\fBcargo\-rpmstatus\fR [\fB\-p\fR|\fB\-\-package\fR] [\fB\-\-features\fR] [\fB\-\-all\-features\fR] [\fB\-\-no\-default\-features\fR] [\fB\-\-target\fR] [\fB\-\-all\-targets\fR] [\fB\-\-no\-dev\-dependencies\fR] [\fB\-\-manifest\-path\fR] [\fB\-i\fR|\fB\-\-invert\fR] [\fB\-\-no\-indent\fR] [\fB\-\-prefix\-depth\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-d\fR|\fB\-\-duplicate\fR] [\fB\-\-charset\fR] [\fB\-f\fR|\fB\-\-format\fR] [\fB\-v\fR|\fB\-\-verbose\fR]... [\fB\-q\fR|\fB\-\-quiet\fR] [\fB\-\-color\fR] [\fB\-\-frozen\fR] [\fB\-\-locked\fR] [\fB\-\-offline\fR] [\fB\-Z \fR] [\fB\-h\fR|\fB\-\-help\fR] 
+.SH DESCRIPTION
+cargo\-tree for RPM packaging
+.PP
+cargo\-rpmstatus should be run in a rust project folder. It will then print a dependency graph showing dependencies already in Fedora rawhide and dependencies still missing for packaging. Dependencies already in the rawhide repo will show up green; those not in rawhide yet white.
+.SH OPTIONS
+.TP
+\fB\-p\fR, \fB\-\-package\fR=\fISPEC\fR
+Package to be used as the root of the tree
+.TP
+\fB\-\-features\fR=\fIFEATURES\fR
+Space\-separated list of features to activate
+.TP
+\fB\-\-all\-features\fR
+Activate all available features
+.TP
+\fB\-\-no\-default\-features\fR
+Do not activate the `default` feature
+.TP
+\fB\-\-target\fR=\fITARGET\fR
+Set the target triple
+.TP
+\fB\-\-all\-targets\fR
+Return dependencies for all targets. By default only the host target is matched
+.TP
+\fB\-\-no\-dev\-dependencies\fR
+Skip dev dependencies
+.TP
+\fB\-\-manifest\-path\fR=\fIPATH\fR
+Path to Cargo.toml
+.TP
+\fB\-i\fR, \fB\-\-invert\fR
+Invert the tree direction
+.TP
+\fB\-\-no\-indent\fR
+Display the dependencies as a list (rather than a tree)
+.TP
+\fB\-\-prefix\-depth\fR
+Display the dependencies as a list (rather than a tree), but prefixed with the depth
+.TP
+\fB\-a\fR, \fB\-\-all\fR
+Don\*(Aqt truncate dependencies that have already been displayed
+.TP
+\fB\-d\fR, \fB\-\-duplicate\fR
+Show only dependencies which come in multiple versions (implies \-i)
+.TP
+\fB\-\-charset\fR=\fICHARSET\fR [default: utf8]
+Character set to use in output: utf8, ascii
+.TP
+\fB\-f\fR, \fB\-\-format\fR=\fIFORMAT\fR [default: {p}]
+Format string used for printing dependencies
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Use verbose output (\-vv very verbose/build.rs output)
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+No output printed to stdout other than the tree
+.TP
+\fB\-\-color\fR=\fIWHEN\fR
+Coloring: auto, always, never
+.TP
+\fB\-\-frozen\fR
+Require Cargo.lock and cache are up to date
+.TP
+\fB\-\-locked\fR
+Require Cargo.lock is up to date
+.TP
+\fB\-\-offline\fR
+Do not access the network
+.TP
+\fB\-Z\fR=\fIFLAG\fR
+Unstable (nightly\-only) flags to Cargo
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help (see a summary with \*(Aq\-h\*(Aq)

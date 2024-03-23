@@ -1,11 +1,11 @@
-use crate::args::Args;
+use crate::args::RpmArgs;
 use anyhow::{anyhow, Context, Error};
 use cargo_metadata::Metadata;
 use std::env;
 use std::ffi::OsString;
 use std::process::{Command, Stdio};
 
-pub fn get(args: &Args) -> Result<Metadata, Error> {
+pub fn get(args: &RpmArgs) -> Result<Metadata, Error> {
     let cargo = env::var_os("CARGO").unwrap_or_else(|| OsString::from("cargo"));
 
     let mut command = Command::new(cargo);

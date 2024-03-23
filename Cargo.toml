@@ -17,7 +17,6 @@ cargo_metadata = "0.15"
 petgraph = "0.6"
 semver = "1"
 serde_json = "1.0"
-structopt = "0.3"
 
 colored = "2"
 serde = { version="1.0", features=["derive"] }
@@ -30,3 +29,6 @@ rusqlite = { version = "0.28.0", features = ["bundled"] }
 ureq = "2.9.6"
 quick-xml = { version = "0.31.0", features = ["serialize"] }
 bzip2 = "0.4.4"
+clap = { version = "4.5.3", features = ["derive"] }
+clap_mangen = "0.2.20"
+
