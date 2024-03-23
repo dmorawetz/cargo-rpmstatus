@@ -119,7 +119,7 @@ fn run_task(db: &mut Connection, pkg: Pkg) -> Result<RpmInfo> {
         version: String::new(),
     };
 
-    let mut info = db.search(&pkg.name, &pkg.version)?;
+    let info = db.search(&pkg.name, &pkg.version)?;
     if info.status != PkgStatus::NotFound {
         rpm.in_rawhide = true;
         rpm.version = info.version;

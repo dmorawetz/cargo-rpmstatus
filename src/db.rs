@@ -201,7 +201,6 @@ impl Connection {
             status: PkgStatus::NotFound,
             version: String::new(),
         };
-        let package = package.replace('_', "-");
         let semver_version = if version.major == 0 {
             if version.minor == 0 {
                 format!("{}.{}.{}", version.major, version.minor, version.patch)
@@ -264,50 +263,25 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn check_version_reqs() {
         let mut db = Connection::new().unwrap();
-        // Debian bullseye has rust-serde v1.0.106 and shouldn't be updated anymore
-        let query =
-            "SELECT version::text FROM sources WHERE source in ($1, $2) AND release='bullseye';";
+        // Fedora rawhide has rust-serde >= v1.0.188 and rust-serde_json >= v1.0.113
         let info = db
-            .search_generic(query, "serde", &Version::parse("1.0.100").unwrap())
+            .search("serde", &Version::parse("1.0.100").unwrap())
             .unwrap();
         assert_eq!(info.status, PkgStatus::Found);
-        assert_eq!(info.version, "1.0.106");
         let info = db
-            .search_generic(query, "serde", &Version::parse("1.0.150").unwrap())
-            .unwrap();
-        assert_eq!(info.status, PkgStatus::Compatible);
-        let info = db
-            .search_generic(query, "serde", &Version::parse("2.0.0").unwrap())
+            .search("serde", &Version::parse("2.0.0").unwrap())
             .unwrap();
         assert_eq!(info.status, PkgStatus::Outdated);
         let info = db
-            .search_generic(query, "notacrate", &Version::parse("1.0.0").unwrap())
+            .search("notacrate", &Version::parse("1.0.0").unwrap())
             .unwrap();
         assert_eq!(info.status, PkgStatus::NotFound);
-    }
 
-    #[test]
-    #[ignore]
-    fn check_zerover_version_reqs() {
-        let mut db = Connection::new().unwrap();
-        // Debian bookworm has rust-zoxide v0.4.3 and shouldn't be updated anymore
-        let query =
-            "SELECT version::text FROM sources WHERE source in ($1, $2) AND release='bookworm';";
         let info = db
-            .search_generic(query, "zoxide", &Version::parse("0.4.1").unwrap())
+            .search("serde_json", &Version::parse("1.0.113").unwrap())
             .unwrap();
         assert_eq!(info.status, PkgStatus::Found);
-        assert_eq!(info.version, "0.4.3");
-        let info = db
-            .search_generic(query, "zoxide", &Version::parse("0.4.5").unwrap())
-            .unwrap();
-        assert_eq!(info.status, PkgStatus::Compatible);
-        let info = db
-            .search_generic(query, "zoxide", &Version::parse("0.5.0").unwrap())
-            .unwrap();
-        assert_eq!(info.status, PkgStatus::Outdated);
     }
 }
