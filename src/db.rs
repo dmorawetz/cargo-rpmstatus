@@ -2,10 +2,10 @@ use crate::errors::*;
 use bzip2::read::MultiBzDecoder;
 use indicatif::ProgressBar;
 use indicatif::ProgressStyle;
+use log::error;
+use rusqlite::Connection as SqliteCon;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-use sqlite::Connection as SqliteCon;
-use sqlite::State;
 use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -173,7 +173,7 @@ impl Connection {
             .join("cargo-rpmstatus");
 
         debug!("Connecting to database");
-        let sock = sqlite::open(cache_dir.join("primary_db.sqlite"))?;
+        let sock = rusqlite::Connection::open(cache_dir.join("primary_db.sqlite"))?;
         debug!("Got database connection");
 
         Ok(Connection { sock })
@@ -183,7 +183,7 @@ impl Connection {
         // config.shell().status("Querying", format!("sid: {}", package))?;
         info!("Querying: {}", package);
         let info = self.search_generic(
-            "SELECT version FROM packages WHERE name LIKE ?;",
+            "SELECT version FROM packages WHERE name LIKE ?1;",
             package,
             version,
         )?;
@@ -210,14 +210,25 @@ impl Connection {
         } else {
             format!("{}", version.major)
         };
-        let mut statement = self.sock.prepare(query).unwrap();
-        statement.bind((1, format!("rust-{package}%").as_str()))?;
+        let mut statement = self.sock.prepare(query)?;
+        let rpm_version_iter = statement
+            .query_map([format!("rust-{package}%").as_str()], |row| {
+                Ok(row.get::<_, String>(0)?)
+            })?;
 
         let version = version.to_string();
         let version = VersionReq::parse(&version)?;
         let semver_version = VersionReq::parse(&semver_version)?;
-        while let Ok(State::Row) = statement.next() {
-            let rpm_version = statement.read::<String, _>("version").unwrap();
+        for rpm_version in rpm_version_iter {
+            if let Err(err) = rpm_version {
+                error!(
+                    "There was an error loading the rpm version from the DB: {}",
+                    err
+                );
+                continue;
+            }
+
+            let rpm_version = rpm_version.unwrap();
 
             if is_compatible(rpm_version.as_str(), &version)? {
                 info.version = rpm_version;
