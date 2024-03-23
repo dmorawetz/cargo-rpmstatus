@@ -1,7 +1,7 @@
 [package]
 name = "cargo-rpmstatus"
 version = "0.1.0"
-description = "cargo-tree for fedora packaging"
+description = "cargo-tree for RPM packaging"
 authors = ["Daniel Morawetz <daniel@morawetz.dev",
            "kpcyrd <git@rxv.cc>",
            "Steven Fackler <sfackler@gmail.com>"]
