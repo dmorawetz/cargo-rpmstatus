@@ -1,4 +1,4 @@
-use crate::db::{Connection, PkgStatus, self};
+use crate::db::{self, Connection, PkgStatus};
 use crate::errors::*;
 use crate::graph::Graph;
 use cargo_metadata::{Package, PackageId, Source};
@@ -136,10 +136,9 @@ fn run_task(db: &mut Connection, pkg: Pkg) -> Result<RpmInfo> {
 }
 
 pub fn populate(graph: &mut Graph) -> Result<(), Error> {
-
     info!("Updating rawhide repo database");
     db::update_rpm_database()?;
-    
+
     let (task_tx, task_rx) = crossbeam_channel::unbounded();
     let (return_tx, return_rx) = crossbeam_channel::unbounded();
 
@@ -179,24 +178,24 @@ pub fn populate(graph: &mut Graph) -> Result<(), Error> {
         }
     }
 
-    info!("Processing debian results");
+    info!("Processing rpm results");
 
     let pb = ProgressBar::new(jobs as u64)
         .with_style(
             ProgressStyle::default_bar()
                 .template("[{pos:.green}/{len:.green}] {prefix:.bold} {wide_bar}")?,
         )
-        .with_prefix("Resolving debian packages");
+        .with_prefix("Resolving rpm packages");
     pb.tick();
 
     for result in return_rx.iter().take(jobs) {
         let result = result.context("A worker crashed")?;
 
         let idx = result.0;
-        let deb = result.1?;
+        let rpm = result.1?;
 
         if let Some(pkg) = graph.graph.node_weight_mut(idx) {
-            pkg.rpminfo = Some(deb);
+            pkg.rpminfo = Some(rpm);
         }
         pb.inc(1);
     }

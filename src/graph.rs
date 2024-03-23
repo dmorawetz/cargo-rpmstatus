@@ -1,6 +1,6 @@
 use crate::args::Args;
 use crate::fedora::Pkg;
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Error};
 use cargo_metadata::{DependencyKind, Metadata, PackageId};
 use petgraph::graph::NodeIndex;
 use petgraph::stable_graph::StableGraph;
@@ -14,7 +14,9 @@ pub struct Graph {
 }
 
 pub fn build(args: &Args, metadata: Metadata) -> Result<Graph, Error> {
-    let resolve = metadata.resolve.unwrap();
+    let resolve = metadata
+        .resolve
+        .context("Unable to resolve dependency information.")?;
 
     let mut graph = Graph {
         graph: StableGraph::new(),

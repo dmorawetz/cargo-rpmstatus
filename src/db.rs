@@ -1,11 +1,19 @@
 use crate::errors::*;
-use sqlite::Connection as SqliteCon;
-use sqlite::State;
+use bzip2::read::MultiBzDecoder;
+use indicatif::ProgressBar;
+use indicatif::ProgressStyle;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-use std::env::consts::ARCH;
+use sqlite::Connection as SqliteCon;
+use sqlite::State;
 use std::fs;
 use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::BufReader;
+use std::io::Seek;
+use std::io::SeekFrom;
+use std::time::Duration;
+use std::time::SystemTime;
 
 const KOJI_REPO: &str = "https://kojipkgs.fedoraproject.org/repos";
 
@@ -23,31 +31,127 @@ pub struct PkgInfo {
     pub version: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct Repomd {
+    revision: u64,
+    #[serde(default)]
+    data: Vec<RepomdData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RepomdData {
+    #[serde(rename = "@type")]
+    data_type: String,
+    location: RepomdLocation,
+}
+
+#[derive(Debug, Deserialize)]
+struct RepomdLocation {
+    #[serde(rename = "@href")]
+    href: String,
+}
+
 pub fn update_rpm_database() -> Result<()> {
+    let pb = ProgressBar::new(3)
+        .with_style(
+            ProgressStyle::default_bar()
+                .template("[{pos:.green}/{len:.green}] {prefix:.bold} / {msg} {wide_bar}")?,
+        )
+        .with_prefix("Updating DB")
+        .with_message("Checking freshness");
+    pb.tick();
+
     let cache_dir = dirs::cache_dir()
-            .context("cache directory not found")?
-            .join("cargo-rpmstatus");
+        .context("cache directory not found")?
+        .join("cargo-rpmstatus");
 
     debug!("Creating cache dir at {}", &cache_dir.display());
-    fs::create_dir_all(&cache_dir)?;
+    fs::create_dir_all(&cache_dir)
+        .with_context(|| format!("could not create cache dir at {}", &cache_dir.display()))?;
 
-    let path = cache_dir.join("repomd.xml");
+    let repomd_path = cache_dir.join("repomd.xml");
+    let primary_db_path = cache_dir.join("primary_db.sqlite");
 
-    let exists = path.try_exists()?;
-    if !exists {
-        debug!("repomd.xml did not exist, downloading now ...");
-        let url = format!("{}/rawhide/latest/{}/repodata/repomd.xml", KOJI_REPO, ARCH);
-        let response =  ureq::get(&url).call().context("could not download repomd.xml")?;
-        if response.content_type() != "text/xml" {
-            debug!("content type {}", response.content_type());
-            bail!("invalid reponse for repomd");
+    let exists = repomd_path.try_exists()?;
+
+    if exists {
+        let modified = fs::metadata(&repomd_path)
+            .context("could not fetch metadata")?
+            .modified()
+            .unwrap_or(SystemTime::UNIX_EPOCH);
+        let duration = modified.elapsed()?;
+        let expired = duration >= Duration::new(24 * 60 * 60, 0);
+
+        if !expired {
+            info!("RPM database up-to-date");
+            pb.finish_and_clear();
+            return Ok(());
         }
-        let mut file = File::create(&path)?;
-        std::io::copy(&mut response.into_reader(), &mut file)?;
-        file.sync_all()?;
     }
 
-    
+    pb.inc(1);
+    pb.set_message("Updating repomd.xml");
+    debug!("repomd.xml did not exist or was older than 24 hours, downloading now ...");
+    // for now just download the x86_64 db, because rust libs are mostly noarch
+    let url = format!("{}/rawhide/latest/x86_64/repodata/repomd.xml", KOJI_REPO);
+    let response = ureq::get(&url)
+        .call()
+        .context("could not download repomd.xml")?;
+    if response.content_type() != "text/xml" {
+        debug!("content type {}", response.content_type());
+        bail!("invalid reponse for repomd");
+    }
+
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&repomd_path)
+        .context("could not create or open repomd.xml")?;
+    std::io::copy(&mut response.into_reader(), &mut file).context("could not write repomd.xml")?;
+    file.sync_all()
+        .context("could not sync repomd file to disk")?;
+
+    file.seek(SeekFrom::Start(0))?;
+
+    let reader = BufReader::new(file);
+    let repomd: Repomd = quick_xml::de::from_reader(reader).context("could not parse repomd")?;
+
+    let mut primary_db_location = repomd
+        .data
+        .into_iter()
+        .find(|x| x.data_type.eq("primary_db"))
+        .map(|x| x.location.href)
+        .context("could not find primary db in repo")?;
+
+    primary_db_location = primary_db_location.replace("repodata/", "");
+    debug!("Primary DB located at {}", &primary_db_location);
+
+    pb.inc(1);
+    pb.set_message("Updating primary_db.sqlite");
+
+    let url = format!(
+        "{}/rawhide/latest/x86_64/repodata/{}",
+        KOJI_REPO, primary_db_location
+    );
+    let response = ureq::get(&url)
+        .call()
+        .context("could not download primary db")?;
+
+    let mut file = File::create(&primary_db_path).context("could not create primary_db.sqlite")?;
+
+    let mut decoder = MultiBzDecoder::new(response.into_reader());
+    std::io::copy(&mut decoder, &mut file).context("could not write decompressed primary db")?;
+    file.sync_all()
+        .context("could not sync primary db to disk")?;
+
+    pb.finish_and_clear();
+
+    info!(
+        "successfully updated the RPM database to revision {}",
+        &repomd.revision
+    );
+
     Ok(())
 }
 
@@ -64,15 +168,18 @@ pub struct Connection {
 
 impl Connection {
     pub fn new() -> Result<Connection, Error> {
+        let cache_dir = dirs::cache_dir()
+            .context("cache directory not found")?
+            .join("cargo-rpmstatus");
+
         debug!("Connecting to database");
-        let sock = sqlite::open("/tmp/koji-primary.sqlite")?;
+        let sock = sqlite::open(cache_dir.join("primary_db.sqlite"))?;
         debug!("Got database connection");
 
         Ok(Connection { sock })
     }
 
     pub fn search(&mut self, package: &str, version: &Version) -> Result<PkgInfo, Error> {
-
         // config.shell().status("Querying", format!("sid: {}", package))?;
         info!("Querying: {}", package);
         let info = self.search_generic(
@@ -106,7 +213,6 @@ impl Connection {
         };
         let mut statement = self.sock.prepare(query).unwrap();
         statement.bind((1, format!("rust-{package}%").as_str()))?;
-
 
         let version = version.to_string();
         let version = VersionReq::parse(&version)?;

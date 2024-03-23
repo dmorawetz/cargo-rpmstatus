@@ -4,8 +4,8 @@ use structopt::StructOpt;
 
 mod args;
 mod db;
-mod fedora;
 mod errors;
+mod fedora;
 mod format;
 mod graph;
 mod metadata;
