@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rpmstatus"
-version = "0.1.0"
+version = "0.2.0"
 description = "cargo-tree for RPM packaging"
 authors = ["Daniel Morawetz <daniel@morawetz.dev",
            "kpcyrd <git@rxv.cc>",
