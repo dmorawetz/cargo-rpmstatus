@@ -1,14 +1,26 @@
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .TH cargo-rpmstatus 1  "cargo-rpmstatus " 
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH NAME
 cargo\-rpmstatus \- cargo\-tree for RPM packaging
-.SH SYNOPSIS
-\fBcargo\-rpmstatus\fR [\fB\-p\fR|\fB\-\-package\fR] [\fB\-\-features\fR] [\fB\-\-all\-features\fR] [\fB\-\-no\-default\-features\fR] [\fB\-\-target\fR] [\fB\-\-all\-targets\fR] [\fB\-\-no\-dev\-dependencies\fR] [\fB\-\-manifest\-path\fR] [\fB\-i\fR|\fB\-\-invert\fR] [\fB\-\-no\-indent\fR] [\fB\-\-prefix\-depth\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-d\fR|\fB\-\-duplicate\fR] [\fB\-\-charset\fR] [\fB\-f\fR|\fB\-\-format\fR] [\fB\-v\fR|\fB\-\-verbose\fR]... [\fB\-q\fR|\fB\-\-quiet\fR] [\fB\-\-color\fR] [\fB\-\-frozen\fR] [\fB\-\-locked\fR] [\fB\-\-offline\fR] [\fB\-Z \fR] [\fB\-h\fR|\fB\-\-help\fR] 
+
+.SH SYNOPSYS
+.PP
+\f[B]cargo rpmstatus\f[R] \f[B]OPTIONS\f[R]
+.PP
+\f[B]cargo rpmstatus --all-features\f[R]
+.PP
+\f[B]cargo rpmstatus -h\f[R]
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH DESCRIPTION
 cargo\-tree for RPM packaging
 .PP
 cargo\-rpmstatus should be run in a rust project folder. It will then print a dependency graph showing dependencies already in Fedora rawhide and dependencies still missing for packaging. Dependencies already in the rawhide repo will show up green; those not in rawhide yet white.
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH OPTIONS
 .TP
 \fB\-p\fR, \fB\-\-package\fR=\fISPEC\fR
@@ -79,3 +91,18 @@ Unstable (nightly\-only) flags to Cargo
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Print help (see a summary with \*(Aq\-h\*(Aq)
+
+.SH AUTHORS
+.TP
+Daniel Morawetz <daniel@morawetz.dev>
+Adapted this manpage from the cargo-debstatus package.
+.TP
+Matthias Geiger <matthias.geiger1024@tutanota.de>
+Wrote the manpage for the Debian system.
+.SH COPYRIGHT
+.PP
+Copyright \[co] 2024 Daniel Morawetz
+.PP
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU General Public License, Version 3 or (at your
+option) any later version published by the Free Software Foundation.
