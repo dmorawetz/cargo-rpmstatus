@@ -30,10 +30,12 @@ fn main() -> Result<(), Error> {
 
     info!("Reading metadata");
     let metadata = metadata::get(&args)?;
+
     info!("Building graph");
     let mut graph = graph::build(&args, metadata)?;
+
     info!("Populating with packaging data");
-    fedora::populate(&mut graph)?;
+    fedora::populate(&mut graph, args.rpm_release.clone())?;
     info!("Printing graph");
     tree::print(&args, &graph)?;
 

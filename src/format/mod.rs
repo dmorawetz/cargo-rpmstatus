@@ -61,19 +61,21 @@ impl<'a> fmt::Display for Display<'a> {
                             if deb.compatible {
                                 write!(
                                     fmt,
-                                    "{} ({} in rawhide)",
+                                    "{} ({} in {})",
                                     pkg.green(),
-                                    deb.version.yellow()
+                                    deb.version.yellow(),
+                                    self.package.rpmrelease
                                 )?;
                             } else if deb.outdated {
                                 write!(
                                     fmt,
-                                    "{} (outdated, {} in rawhide)",
+                                    "{} (outdated, {} in {})",
                                     pkg.yellow(),
-                                    deb.version.red()
+                                    deb.version.red(),
+                                    self.package.rpmrelease
                                 )?;
                             } else {
-                                write!(fmt, "{} (in rawhide)", pkg.green())?;
+                                write!(fmt, "{} (in {})", pkg.green(), self.package.rpmrelease)?;
                             }
                         } else if deb.outdated {
                             write!(fmt, "{} (outdated, {})", pkg.red(), deb.version.red())?;

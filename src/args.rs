@@ -54,6 +54,9 @@ pub struct RpmArgs {
     #[arg(long = "all-targets")]
     /// Return dependencies for all targets. By default only the host target is matched.
     pub all_targets: bool,
+    #[arg(long = "rpm-release", value_name = "RELEASE")]
+    /// Choose the target release (default rawhide, possible fedora versions (e.g. f39), or epel (e.g. epel9))
+    pub rpm_release: Option<String>,
     #[arg(long = "no-dev-dependencies")]
     /// Skip dev dependencies.
     pub no_dev_dependencies: bool,

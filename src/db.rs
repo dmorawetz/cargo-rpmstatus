@@ -51,7 +51,7 @@ struct RepomdLocation {
     href: String,
 }
 
-pub fn update_rpm_database() -> Result<()> {
+pub fn update_rpm_database(rpmrelease: &String) -> Result<()> {
     let pb = ProgressBar::new(3)
         .with_style(
             ProgressStyle::default_bar()
@@ -63,7 +63,8 @@ pub fn update_rpm_database() -> Result<()> {
 
     let cache_dir = dirs::cache_dir()
         .context("cache directory not found")?
-        .join("cargo-rpmstatus");
+        .join("cargo-rpmstatus")
+        .join(rpmrelease);
 
     debug!("Creating cache dir at {}", &cache_dir.display());
     fs::create_dir_all(&cache_dir)
@@ -92,8 +93,16 @@ pub fn update_rpm_database() -> Result<()> {
     pb.inc(1);
     pb.set_message("Updating repomd.xml");
     debug!("repomd.xml did not exist or was older than 24 hours, downloading now ...");
+    let release_path_seg = if rpmrelease.starts_with("rawhide") {
+        String::from("rawhide")
+    } else {
+        format!("{}-build", rpmrelease)
+    };
     // for now just download the x86_64 db, because rust libs are mostly noarch
-    let url = format!("{}/rawhide/latest/x86_64/repodata/repomd.xml", KOJI_REPO);
+    let url = format!(
+        "{}/{}/latest/x86_64/repodata/repomd.xml",
+        KOJI_REPO, release_path_seg
+    );
     let response = ureq::get(&url)
         .call()
         .context("could not download repomd.xml")?;
@@ -131,8 +140,8 @@ pub fn update_rpm_database() -> Result<()> {
     pb.set_message("Updating primary_db.sqlite");
 
     let url = format!(
-        "{}/rawhide/latest/x86_64/repodata/{}",
-        KOJI_REPO, primary_db_location
+        "{}/{}/latest/x86_64/repodata/{}",
+        KOJI_REPO, release_path_seg, primary_db_location
     );
     let response = ureq::get(&url)
         .call()
@@ -148,8 +157,8 @@ pub fn update_rpm_database() -> Result<()> {
     pb.finish_and_clear();
 
     info!(
-        "successfully updated the RPM database to revision {}",
-        &repomd.revision
+        "successfully updated the RPM database for repo {} to revision {}",
+        rpmrelease, &repomd.revision
     );
 
     Ok(())
@@ -167,10 +176,11 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn new() -> Result<Connection, Error> {
+    pub fn new(rpmrelease: &String) -> Result<Connection, Error> {
         let cache_dir = dirs::cache_dir()
             .context("cache directory not found")?
-            .join("cargo-rpmstatus");
+            .join("cargo-rpmstatus")
+            .join(rpmrelease);
 
         debug!("Connecting to database");
         let sock = rusqlite::Connection::open(cache_dir.join("primary_db.sqlite"))?;
@@ -275,9 +285,10 @@ mod tests {
 
     #[test]
     fn check_version_reqs() {
-        update_rpm_database().unwrap();
+        let rpmrelease = String::from("rawhide");
+        update_rpm_database(&rpmrelease).unwrap();
 
-        let mut db = Connection::new().unwrap();
+        let mut db = Connection::new(&rpmrelease).unwrap();
         // Fedora rawhide has rust-serde >= v1.0.188 and rust-serde_json >= v1.0.113
         let info = db
             .search("serde", &Version::parse("1.0.100").unwrap())

@@ -20,6 +20,7 @@ pub struct Pkg {
     pub license: Option<String>,
     pub repository: Option<String>,
 
+    pub rpmrelease: String,
     pub rpminfo: Option<RpmInfo>,
 }
 
@@ -55,6 +56,7 @@ impl Pkg {
             license: pkg.license,
             repository: pkg.repository,
 
+            rpmrelease: String::from("rawhide"),
             rpminfo: None,
         }
     }
@@ -135,9 +137,11 @@ fn run_task(db: &mut Connection, pkg: Pkg) -> Result<RpmInfo> {
     Ok(rpm)
 }
 
-pub fn populate(graph: &mut Graph) -> Result<(), Error> {
-    info!("Updating rawhide repo database");
-    db::update_rpm_database()?;
+pub fn populate(graph: &mut Graph, rpmrelease: Option<String>) -> Result<(), Error> {
+    let rpmrelease = rpmrelease.unwrap_or(String::from("rawhide"));
+
+    info!("Updating {} release database", rpmrelease);
+    db::update_rpm_database(&rpmrelease)?;
 
     let (task_tx, task_rx) = crossbeam_channel::unbounded();
     let (return_tx, return_rx) = crossbeam_channel::unbounded();
@@ -147,8 +151,9 @@ pub fn populate(graph: &mut Graph) -> Result<(), Error> {
         let task_rx = task_rx.clone();
         let return_tx = return_tx.clone();
 
+        let rpmrelease = rpmrelease.clone();
         thread::spawn(move || {
-            let mut db = match Connection::new() {
+            let mut db = match Connection::new(&rpmrelease) {
                 Ok(db) => db,
                 Err(err) => {
                     return_tx.send(Err(err)).unwrap();
@@ -195,6 +200,7 @@ pub fn populate(graph: &mut Graph) -> Result<(), Error> {
         let rpm = result.1?;
 
         if let Some(pkg) = graph.graph.node_weight_mut(idx) {
+            pkg.rpmrelease = rpmrelease.clone();
             pkg.rpminfo = Some(rpm);
         }
         pb.inc(1);
