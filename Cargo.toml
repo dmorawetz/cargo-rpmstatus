@@ -31,4 +31,7 @@ quick-xml = { version = "0.31.0", features = ["serialize"] }
 bzip2 = "0.4.4"
 clap = { version = "=4.4.7", features = ["derive"] }
 clap_mangen = "=0.2.18"
+rand = "0.8.5"
+tar = "0.4.40"
+flate2 = "1.0.28"
 

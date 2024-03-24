@@ -64,6 +64,13 @@ pub struct RpmArgs {
     )]
     /// Path to Cargo.toml
     pub manifest_path: Option<PathBuf>,
+    #[arg(
+        long = "crate-path",
+        value_name = "PATH",
+        value_parser(PathBufValueParser::new())
+    )]
+    /// Path to <package>.crate (from `rust2rpm -s`)
+    pub crate_path: Option<PathBuf>,
     #[arg(long = "invert", short = 'i')]
     /// Invert the tree direction
     pub invert: bool,
@@ -106,7 +113,7 @@ pub struct RpmArgs {
     /// Require Cargo.lock is up to date
     pub locked: bool,
     #[arg(long = "offline")]
-    /// Do not access the network
+    /// Do not access the network when resolving metadata with cargo
     pub offline: bool,
     #[arg(short = 'Z', value_name = "FLAG")]
     /// Unstable (nightly-only) flags to Cargo

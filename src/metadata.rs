@@ -1,11 +1,17 @@
 use crate::args::RpmArgs;
-use anyhow::{anyhow, Context, Error};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use cargo_metadata::Metadata;
-use std::env;
+use flate2::read::GzDecoder;
+use log::{debug, info, trace};
+use rand::distributions::{Alphanumeric, DistString};
 use std::ffi::OsString;
+use std::fs::File;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::{env, fs};
+use tar::Archive;
 
-pub fn get(args: &RpmArgs) -> Result<Metadata, Error> {
+pub fn get(args: &RpmArgs) -> Result<Metadata> {
     let cargo = env::var_os("CARGO").unwrap_or_else(|| OsString::from("cargo"));
 
     let mut command = Command::new(cargo);
@@ -38,7 +44,14 @@ pub fn get(args: &RpmArgs) -> Result<Metadata, Error> {
         }
     }
 
-    if let Some(path) = &args.manifest_path {
+    if let Some(path) = &args.crate_path {
+        let extracted_path = extract_crate_cargo_toml(path)?;
+        debug!(
+            "Using extracted Cargo.toml at {}",
+            &extracted_path.display()
+        );
+        command.arg("--manifest-path").arg(extracted_path);
+    } else if let Some(path) = &args.manifest_path {
         command.arg("--manifest-path").arg(path);
     }
 
@@ -94,4 +107,36 @@ fn output(command: &mut Command, job: &str) -> Result<String, Error> {
     }
 
     String::from_utf8(output.stdout).with_context(|| format!("error parsing {job} output"))
+}
+
+fn extract_crate_cargo_toml(crate_path: &PathBuf) -> Result<PathBuf> {
+    let tmp_dir = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+    let tmp_path = env::temp_dir().join(tmp_dir);
+
+    info!(
+        "Creating tmp path for Cargo.toml at {}",
+        &tmp_path.display()
+    );
+    fs::create_dir_all(&tmp_path)?;
+
+    let tar_gz = File::open(crate_path)?;
+    let tar = GzDecoder::new(tar_gz);
+    let mut archive = Archive::new(tar);
+    let manifest = archive.entries()?.filter_map(|e| e.ok()).find(|x| {
+        trace!("found entry {:?}", x.path());
+        x.path().unwrap_or_default().ends_with("Cargo.toml")
+    });
+
+    match manifest {
+        Some(mut entry) => {
+            let written = entry.unpack_in(&tmp_path)?;
+
+            if !written {
+                bail!("could not extract manifest from crate file");
+            }
+
+            return Ok(tmp_path.join(entry.path()?));
+        }
+        None => bail!("could not find manifest file in crate"),
+    }
 }
