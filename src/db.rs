@@ -284,8 +284,9 @@ mod tests {
     }
 
     #[test]
-    fn check_version_reqs() {
+    fn online_check_version_reqs() {
         let rpmrelease = String::from("rawhide");
+        // Downloads current packages repository, needs network
         update_rpm_database(&rpmrelease).unwrap();
 
         let mut db = Connection::new(&rpmrelease).unwrap();
