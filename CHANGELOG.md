@@ -1,16 +1,17 @@
 # Changelog
 
-## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.1.0...main)
+## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.2...main)
 
+## [0.2.2](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.1...v0.2.2)
 
-### Features
+- Loosen version requirements
+- Drop the bundled sqlite dependency (needs to be installed separately)
 
 ## [0.2.1](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.0...v0.2.1)
 
 - Clarify licensing
 
 ## [0.2.0](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.1.0...v0.2.0)
-
 
 ### Features
 
