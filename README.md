@@ -21,4 +21,11 @@ $ cargo rpmstatus
 
 ## License
 
-GPLv3+
+This codebase is licensed:
+
+```
+(MIT OR Apache-2.0) AND GPL-3.0-or-later
+```
+
+due to it's use of cargo-tree code. The cargo-debstatus code is licensed
+`GPL-3.0-or-later`. The cargo-rpmstatus code, therefore, is also licensed `GPL-3.0-or-later`. Terms of the GPL apply.

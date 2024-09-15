@@ -5,7 +5,7 @@ description = "cargo-tree for RPM packaging"
 authors = ["Daniel Morawetz <daniel@morawetz.dev",
            "kpcyrd <git@rxv.cc>",
            "Steven Fackler <sfackler@gmail.com>"]
-license = "GPL-3.0"
+license = "(MIT OR Apache-2.0) AND GPL-3.0-or-later"
 repository = "https://github.com/dmorawetz/cargo-rpmstatus"
 categories = ["command-line-utilities"]
 readme = "README.md"
