@@ -41,11 +41,17 @@ Set the target triple
 \fB\-\-all\-targets\fR
 Return dependencies for all targets. By default only the host target is matched
 .TP
+\fB\-\-rpm\-release\fR=\fIRELEASE\fR
+Choose the target release (default rawhide, possible fedora versions (e.g. f39), or epel (e.g. epel9))
+.TP
 \fB\-\-no\-dev\-dependencies\fR
 Skip dev dependencies
 .TP
 \fB\-\-manifest\-path\fR=\fIPATH\fR
 Path to Cargo.toml
+.TP
+\fB\-\-crate\-path\fR=\fIPATH\fR
+Path to <package>.crate (from `rust2rpm \-s`)
 .TP
 \fB\-i\fR, \fB\-\-invert\fR
 Invert the tree direction
@@ -84,7 +90,7 @@ Require Cargo.lock and cache are up to date
 Require Cargo.lock is up to date
 .TP
 \fB\-\-offline\fR
-Do not access the network
+Do not access the network when resolving metadata with cargo
 .TP
 \fB\-Z\fR=\fIFLAG\fR
 Unstable (nightly\-only) flags to Cargo
