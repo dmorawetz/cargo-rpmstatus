@@ -8,6 +8,12 @@ The codebase is a modified version of [kpcyrd/cargo-debstatus](https://github.co
 
 ## How to run
 
+### Prerequisites
+
+In order to build this project the `sqlite3.h` file is required on the system. On Fedora, this can be found in the `sqlite-devel` package. On Debian, install the `libsqlite3-dev` package. For more information check out the [documentation of rusqlite](https://github.com/rusqlite/rusqlite?tab=readme-ov-file#notes-on-building-rusqlite-and-libsqlite3-sys).
+
+### Install and run the project
+
 ```shell
 $ cargo install cargo-rpmstatus
 $ cargo rpmstatus
