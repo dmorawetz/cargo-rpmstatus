@@ -5,6 +5,7 @@
 ## [0.2.4](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.3...v0.2.4)
 
 - Update dependencies for easier packaging
+- Update rust edition
 
 ## [0.2.3](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.2...v0.2.3)
 
