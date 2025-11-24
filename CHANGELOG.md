@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.3...main)
+## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.4...main)
+
+## [0.2.4](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.3...v0.2.4)
+
+- Update dependencies for easier packaging
 
 ## [0.2.3](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.2...v0.2.3)
 

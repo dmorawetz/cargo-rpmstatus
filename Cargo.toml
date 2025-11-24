@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rpmstatus"
-version = "0.2.3"
+version = "0.2.4"
 description = "cargo-tree for RPM packaging"
 authors = ["Daniel Morawetz <daniel@morawetz.dev",
            "kpcyrd <git@rxv.cc>",
@@ -24,7 +24,7 @@ dirs = "6"
 log = "0.4"
 crossbeam-channel = "0.5"
 env_logger = "0.10"
-indicatif = "0.17"
+indicatif = "0.18"
 rusqlite = { version = "0.28.0" }
 ureq = "2.9.1"
 quick-xml = { version = "0.31.0", features = ["serialize"] }
