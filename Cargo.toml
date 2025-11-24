@@ -13,25 +13,25 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
-cargo_metadata = "0.15"
-petgraph = "0.6"
+cargo_metadata = "0.19"
+petgraph = "0.8"
 semver = "1"
 serde_json = "1.0"
 
-colored = "2"
+colored = "3"
 serde = { version="1.0", features=["derive"] }
 dirs = "6"
 log = "0.4"
 crossbeam-channel = "0.5"
-env_logger = "0.10"
+env_logger = "0.11"
 indicatif = "0.18"
-rusqlite = { version = "0.28.0" }
+rusqlite = { version = "0.31.0" }
 ureq = "2.9.1"
-quick-xml = { version = "0.31.0", features = ["serialize"] }
+quick-xml = { version = "0.38.0", features = ["serialize"] }
 bzip2 = ">=0.4.4, <0.6"
 clap = { version = "4.4.7", features = ["derive"] }
 clap_mangen = "0.2.18"
-rand = "0.8.5"
+rand = "0.9"
 tar = "0.4.40"
 flate2 = "1.0.28"
 

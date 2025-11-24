@@ -3,7 +3,7 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use cargo_metadata::Metadata;
 use flate2::read::GzDecoder;
 use log::{debug, info, trace};
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use std::ffi::OsString;
 use std::fs::File;
 use std::path::PathBuf;
@@ -110,7 +110,7 @@ fn output(command: &mut Command, job: &str) -> Result<String, Error> {
 }
 
 fn extract_crate_cargo_toml(crate_path: &PathBuf) -> Result<PathBuf> {
-    let tmp_dir = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+    let tmp_dir = Alphanumeric.sample_string(&mut rand::rng(), 16);
     let tmp_path = env::temp_dir().join(tmp_dir);
 
     info!(
