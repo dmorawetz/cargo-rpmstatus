@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.4...main)
+## [Unreleased](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.5...main)
+
+## [0.2.5](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.4...v0.2.5)
+
+- Update bzip2 to rust native implementation
 
 ## [0.2.4](https://github.com/dmorawetz/cargo-rpmstatus/compare/v0.2.3...v0.2.4)
 
