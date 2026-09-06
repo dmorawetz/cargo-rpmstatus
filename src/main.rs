@@ -50,7 +50,7 @@ fn generate_manpage() -> anyhow::Result<()> {
     man.render_title(&mut writer)?;
     man.render_name_section(&mut writer)?;
     let synopsis = r"
-.SH SYNOPSYS
+.SH SYNOPSIS
 .PP
 \f[B]cargo rpmstatus\f[R] \f[B]OPTIONS\f[R]
 .PP
